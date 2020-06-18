@@ -6,6 +6,12 @@ import os
 import csv
 from datetime import datetime
 
+def read_keys():
+    fileDir = os.path.dirname(os.path.realpath('__file__'))
+    print(fileDir)
+    f=open(keys_dir+"keys.json","r")
+    keys=json.load(f)
+    return keys
 
 def get_keys(key_name):
         keys=[]
@@ -79,7 +85,7 @@ def get_vuln_filters(headers):
 			# print(filter_control)
 			# print(control_list)
 			return control_list
-		
+
 
 def get_assets_no_tg(headers):
 	# company summary - no target group
@@ -139,7 +145,7 @@ def get_scan_details(scan_id,hist_id,headers):
 	response = requests.request("GET", url, headers=headers, params=querystring)
 	decoded = json.loads(response.text)
 	scan_start=decoded['info']['scan_start']
-	print scan_start
+	print(scan_start)
 	days_since=days_passed(scan_start)
 	name=decoded['info']['name']
 	owner=decoded['info']['owner']
@@ -159,65 +165,65 @@ def get_scan_history(id,headers):
 	return history
 
 def get_scans(headers):
-	url = "https://cloud.tenable.com/scans"
-	response = requests.request("GET", url, headers=headers)
-	decoded = json.loads(response.text)
-	row=[]
-	table=[]
-	count=0
-	for x in decoded['scans']:
-	  try:
-		name=x['name']
-		id=x['id']
-		enabled=x['enabled']
-		owner=x['owner']
-		status=x['status']
-		type=x['type']
-		rrules=x['rrules']
-		schuuid=x['schedule_uuid']
-		if status!="empty":
-			count=count+1
-			row=[id,name,owner,status,type,rrules,schuuid]
-			print("Scan job = "+str(id)+" | "+name+" | "+owner)
-			table.append(row)
-	  except:
-		if status!="empty":
-			row=[id,name,"error"]
-			print row
-			#table.append(row)
-	print("Num scan jobs = "+str(count))
-	return table
+    url = "https://cloud.tenable.com/scans"
+    response = requests.request("GET", url, headers=headers)
+    decoded = json.loads(response.text)
+    row=[]
+    table=[]
+    count=0
+    for x in decoded['scans']:
+        try:
+            name=x['name']
+            id=x['id']
+            enabled=x['enabled']
+            owner=x['owner']
+            status=x['status']
+            type=x['type']
+            rrules=x['rrules']
+            schuuid=x['schedule_uuid']
+            if status!="empty":
+                count=count+1
+                row=[id,name,owner,status,type,rrules,schuuid]
+                print("Scan job = "+str(id)+" | "+name+" | "+owner)
+                table.append(row)
+        except:
+            if status!="empty":
+                row=[id,name,"error"]
+                print(row)
+    #table.append(row)
+    print("Num scan jobs = "+str(count))
+    return table
 
 
 def write_csv(fh,lst):
-        for row in lst:
-                for col in row:
-			if isinstance(col,str):
-	                        myString=col.replace(","," | ")+","
-			elif isinstance(col,unicode):
-				myString=col.encode("utf-8").replace(","," | ")+","
-			else:
-	                        myString=str(col).replace(","," | ")+","
-                        fh.write(myString.replace("\n"," ").replace("\r"," "))
-			print myString
-                myTimeString2="(UTC - "+datetime.utcfromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')+")"
-                fh.write(myTimeString2)
-                fh.write("\n")
+    for row in lst:
+        for col in row:
+            if isinstance(col,str):
+                myString=col.replace(","," | ")+","
+            elif isinstance(col,unicode):
+                myString=col.encode("utf-8").replace(","," | ")+","
+            else:
+                myString=str(col).replace(","," | ")+","
+            fh.write(myString.replace("\n"," ").replace("\r"," "))
+            print(myString)
+            myTimeString2="(UTC - "+datetime.utcfromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')+")"
+            fh.write(myTimeString2)
+            fh.write("\n")
 
 def write_csv_row(fh,row):
-                for col in row:
-			if isinstance(col,str):
-	                        myString=col.replace(","," | ")+","
-			elif isinstance(col,unicode):
-				myString=col.encode("utf-8").replace(","," | ")+","
-			else:
-	                        myString=str(col).replace(","," | ")+","
-                        fh.write(myString.replace('\n',' ').replace('\r',' '))
-                        fh.write(myString)
-			print myString
-                myTimeString2="(UTC - "+datetime.utcfromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')+")"
-                fh.write(myTimeString2)
-                fh.write("\n")
+    for col in row:
+        if isinstance(col,str):
+            myString=col.replace(","," | ")+","
+        elif isinstance(col,unicode):
+            myString=col.encode("utf-8").replace(","," | ")+","
+        else:
+            myString=str(col).replace(","," | ")+","
+        fh.write(myString.replace('\n',' ').replace('\r',' '))
+        fh.write(myString)
+        print(myString)
+        myTimeString2="(UTC - "+datetime.utcfromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')+")"
+        fh.write(myTimeString2)
+        fh.write("\n")
 
 
 #
@@ -226,15 +232,12 @@ def write_csv_row(fh,row):
 
 print("\n*** in Master ***")
 
-if len(sys.argv)!=2:
-        print "Need to supply key name where key name is one of the names in keys.csv"
-        exit(0)
+keys_dir="../"
+results_dir="../results/"
 
-key_lst=get_keys(sys.argv[1])
-
-tio_AK=key_lst[0]
-tio_SK=key_lst[1]
-res_dir=key_lst[2]
+keys=read_keys()
+tio_AK=keys["tio_AK"]
+tio_SK=keys["tio_SK"]
 
 api_keys="accessKey="+tio_AK+";secretKey="+tio_SK
 
@@ -245,7 +248,7 @@ headers = {
     }
 
 
-output_dir=res_dir+"/"
+
 myTimeString=" (UTC,"+datetime.utcfromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')+","+str(time.time())+")"
 
 #
@@ -257,76 +260,72 @@ company_summary=1
 tg_summary=1
 asset_summary=1
 vuln_summary=1
-user_summary=0
-scan_summary=1
-scan_history=1
-scan_details=1
 
 #
 # company summary - no target group
 #
 if company_summary==1:
-	f=open(output_dir+"company_summary.csv","w+")
-	fcsv=csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-	# all licensed
-	asset_count=get_assets_no_tg(headers)
-	time.sleep(1)
-	# nnm exclusive
-	querystring = {"date_range":"90","filter.0.filter":"is_licensed","filter.0.quality":"eq","filter.0.value":"true","filter.1.filter":"sources","filter.1.quality":"set-hasonly","filter.1.value":"PVS","filter.search_type":"and","all_fields":"full"}
-	pvs_count=get_assets_filtered(querystring,headers)
-	time.sleep(1)
-	# nessus exclusive
-	querystring = {"date_range":"90","filter.0.filter":"is_licensed","filter.0.quality":"eq","filter.0.value":"true","filter.1.filter":"sources","filter.1.quality":"set-hasonly","filter.1.value":"NESSUS_SCAN","filter.search_type":"and","all_fields":"full"}
-	nessus_count=get_assets_filtered(querystring,headers)
-	time.sleep(1)
-	# agent exclusive
-	querystring = {"date_range":"90","filter.0.filter":"is_licensed","filter.0.quality":"eq","filter.0.value":"true","filter.1.filter":"sources","filter.1.quality":"set-hasonly","filter.1.value":"NESSUS_AGENT","filter.search_type":"and","all_fields":"full"}
-	agent_count=get_assets_filtered(querystring,headers)
-	time.sleep(1)
-	# has agent
-	querystring = {"date_range":"90","filter.0.filter":"is_licensed","filter.0.quality":"eq","filter.0.value":"true","filter.1.filter":"sources","filter.1.quality":"set-has","filter.1.value":"NESSUS_AGENT","filter.search_type":"and","all_fields":"full"}
-	has_agent_count=get_assets_filtered(querystring,headers)
-	time.sleep(1)
-	# has nessus
-	querystring = {"date_range":"90","filter.0.filter":"is_licensed","filter.0.quality":"eq","filter.0.value":"true","filter.1.filter":"sources","filter.1.quality":"set-has","filter.1.value":"NESSUS_SCAN","filter.search_type":"and","all_fields":"full"}
-	has_nessus_count=get_assets_filtered(querystring,headers)
-	time.sleep(1)
-	print("Total Licensed Asset Count = "+str(asset_count))
-	print("NNM Exclusive = "+str(pvs_count))
-	print("Agent Exclusive = "+str(agent_count))
-	print("Nessus Exclusive = "+str(nessus_count))
-	print("Has Agent = "+str(has_agent_count))
-	print("Has Nessus = "+str(has_nessus_count))
-	time.sleep(1)
-        querystringC = {"date_range":"90","filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"Critical","filter.search_type":"and","all_fields":"full"}
-        querystringH = {"date_range":"90","filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"High","filter.search_type":"and","all_fields":"full"}
-        querystringM = {"date_range":"90","filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"Medium","filter.search_type":"and","all_fields":"full"}
-        querystringL = {"date_range":"90","filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"Low","filter.search_type":"and","all_fields":"full"}
-        vuln_countC=get_vulns(querystringC,headers)
-        vuln_countH=get_vulns(querystringH,headers)
-        vuln_countM=get_vulns(querystringM,headers)
-        vuln_countL=get_vulns(querystringL,headers)
-	print("\n*** Company Summary ***")
-	print("Asset Count="+str(asset_count)+" Criticals="+str(vuln_countC)+" Highs="+str(vuln_countH)+" Med="+str(vuln_countM)+" Low="+str(vuln_countL))
-        myTimeString2=datetime.utcfromtimestamp(time.time()).strftime('%Y-%m-%d')
-	row=[myTimeString2, asset_count, vuln_countC, vuln_countH, vuln_countM, vuln_countL]
-	fcsv.writerow(row)
-	f.close()
-	# append to history file
-	f=open(output_dir+"company_history.csv","a+")
-	fcsv=csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        myTimeString2=datetime.utcfromtimestamp(time.time()).strftime('%Y-%m-%d')
-	row=[myTimeString2,asset_count, vuln_countC, vuln_countH, vuln_countM, vuln_countL]
-	fcsv.writerow(row)
-	f.close()
+    f=open(results_dir+"company_summary.csv","w+")
+    fcsv=csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    # all licensed
+    asset_count=get_assets_no_tg(headers)
+    time.sleep(1)
+    # nnm exclusive
+    querystring = {"date_range":"90","filter.0.filter":"is_licensed","filter.0.quality":"eq","filter.0.value":"true","filter.1.filter":"sources","filter.1.quality":"set-hasonly","filter.1.value":"PVS","filter.search_type":"and","all_fields":"full"}
+    pvs_count=get_assets_filtered(querystring,headers)
+    time.sleep(1)
+    # nessus exclusive
+    querystring = {"date_range":"90","filter.0.filter":"is_licensed","filter.0.quality":"eq","filter.0.value":"true","filter.1.filter":"sources","filter.1.quality":"set-hasonly","filter.1.value":"NESSUS_SCAN","filter.search_type":"and","all_fields":"full"}
+    nessus_count=get_assets_filtered(querystring,headers)
+    time.sleep(1)
+    # agent exclusive
+    querystring = {"date_range":"90","filter.0.filter":"is_licensed","filter.0.quality":"eq","filter.0.value":"true","filter.1.filter":"sources","filter.1.quality":"set-hasonly","filter.1.value":"NESSUS_AGENT","filter.search_type":"and","all_fields":"full"}
+    agent_count=get_assets_filtered(querystring,headers)
+    time.sleep(1)
+    # has agent
+    querystring = {"date_range":"90","filter.0.filter":"is_licensed","filter.0.quality":"eq","filter.0.value":"true","filter.1.filter":"sources","filter.1.quality":"set-has","filter.1.value":"NESSUS_AGENT","filter.search_type":"and","all_fields":"full"}
+    has_agent_count=get_assets_filtered(querystring,headers)
+    time.sleep(1)
+    # has nessus
+    querystring = {"date_range":"90","filter.0.filter":"is_licensed","filter.0.quality":"eq","filter.0.value":"true","filter.1.filter":"sources","filter.1.quality":"set-has","filter.1.value":"NESSUS_SCAN","filter.search_type":"and","all_fields":"full"}
+    has_nessus_count=get_assets_filtered(querystring,headers)
+    time.sleep(1)
+    print("Total Licensed Asset Count = "+str(asset_count))
+    print("NNM Exclusive = "+str(pvs_count))
+    print("Agent Exclusive = "+str(agent_count))
+    print("Nessus Exclusive = "+str(nessus_count))
+    print("Has Agent = "+str(has_agent_count))
+    print("Has Nessus = "+str(has_nessus_count))
+    time.sleep(1)
+    querystringC = {"date_range":"90","filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"Critical","filter.search_type":"and","all_fields":"full"}
+    querystringH = {"date_range":"90","filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"High","filter.search_type":"and","all_fields":"full"}
+    querystringM = {"date_range":"90","filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"Medium","filter.search_type":"and","all_fields":"full"}
+    querystringL = {"date_range":"90","filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"Low","filter.search_type":"and","all_fields":"full"}
+    vuln_countC=get_vulns(querystringC,headers)
+    vuln_countH=get_vulns(querystringH,headers)
+    vuln_countM=get_vulns(querystringM,headers)
+    vuln_countL=get_vulns(querystringL,headers)
+    print("\n*** Company Summary ***")
+    print("Asset Count="+str(asset_count)+" Criticals="+str(vuln_countC)+" Highs="+str(vuln_countH)+" Med="+str(vuln_countM)+" Low="+str(vuln_countL))
+    myTimeString2=datetime.utcfromtimestamp(time.time()).strftime('%Y-%m-%d')
+    row=[myTimeString2, asset_count, vuln_countC, vuln_countH, vuln_countM, vuln_countL]
+    fcsv.writerow(row)
+    f.close()
+    # append to history file
+    f=open(results_dir+"company_history.csv","a+")
+    fcsv=csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    myTimeString2=datetime.utcfromtimestamp(time.time()).strftime('%Y-%m-%d')
+    row=[myTimeString2,asset_count, vuln_countC, vuln_countH, vuln_countM, vuln_countL]
+    fcsv.writerow(row)
+    f.close()
 
 
 #
 # Target Group Summary
 #
 if tg_summary==1:
-	print "\n** Target Group Summary **"
-	f=open(output_dir+"tgs_details.csv","w+")
+	print("\n** Target Group Summary **")
+	f=open(results_dir+"tgs_details.csv","w+")
 	fcsv=csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 	for row in tg_info:
 		print(row[0])
@@ -338,38 +337,37 @@ if tg_summary==1:
 # Asset Count by Target Group
 #
 if asset_summary==1:
-	print("\n** Asset Count per Target Group **")
-	f=open(output_dir+"tgs_asset_count_hist.csv","w+")
-	row=[]
-	table_data=[]
-	for x in asset_filters:
-	        tg_id=x['value']
-		if tg_id!=2746: #exclude corrupt record
-	        	fname=str(tg_id)+"_asset_count_hist.csv"
-		        f.write(fname+","+x['name']+"\n")
-		        asset_count=get_assets(x['value'],headers)
-			time.sleep(0.500)
-		        row=[x['name'],x['value'],asset_count]
-		        print x['name'], x['value'], asset_count
-		        table_data.append(row)
-		        f2=open(output_dir+fname,"a+")
-		        myTimeString2=datetime.utcfromtimestamp(time.time()).strftime('%Y-%m-%d')
-		        f2.write(myTimeString2+","+str(asset_count)+","+str(x['name'])+"\n")
-		        f2.close()
-	f.close()
-	f=open(output_dir+"tgs_asset_count.csv","w+")
-	fcsv=csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-	for row in table_data:
-		#print row
-		fcsv.writerow(row)
-	f.close()
+    print("\n** Asset Count per Target Group **")
+    f=open(results_dir+"tgs_asset_count_hist.csv","w+")
+    row=[]
+    table_data=[]
+    for x in asset_filters:
+        tg_id=x['value']
+        fname=str(tg_id)+"_asset_count_hist.csv"
+        f.write(fname+","+x['name']+"\n")
+        asset_count=get_assets(x['value'],headers)
+        time.sleep(0.500)
+        row=[x['name'],x['value'],asset_count]
+        print(x['name'], x['value'], asset_count)
+        table_data.append(row)
+    f2=open(results_dir+fname,"a+")
+    myTimeString2=datetime.utcfromtimestamp(time.time()).strftime('%Y-%m-%d')
+    f2.write(myTimeString2+","+str(asset_count)+","+str(x['name'])+"\n")
+    f2.close()
+    f.close()
+    f=open(results_dir+"tgs_asset_count.csv","w+")
+    fcsv=csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    for row in table_data:
+    #print row
+        fcsv.writerow(row)
+    f.close()
 
 #
 # Vuln Count by Target Group and Severity
 #
 if vuln_summary==1:
-	print "\n** Vuln Count by Target Group **"
-	f=open(output_dir+"tgs_vuln_count_hist.csv","w+")
+	print("\n** Vuln Count by Target Group **")
+	f=open(results_dir+"tgs_vuln_count_hist.csv","w+")
 	row=[]
 	table_data=[]
 	for x in vuln_filters:
@@ -391,128 +389,17 @@ if vuln_summary==1:
 	   time.sleep(0.500)
 	   asset_count=get_assets(tg_value,headers)
 	   row=[tg_name,tg_value,vuln_countC,vuln_countH,vuln_countM,vuln_countL,asset_count]
-	   print tg_name, tg_value, vuln_countC, vuln_countH, vuln_countM, vuln_countL,asset_count
+	   print(tg_name, tg_value, vuln_countC, vuln_countH, vuln_countM, vuln_countL,asset_count)
 	   table_data.append(row)
-	   f2=open(output_dir+fname,"a+")
+	   f2=open(results_dir+fname,"a+")
 	   myTimeString2=datetime.utcfromtimestamp(time.time()).strftime('%Y-%m-%d')
 	   f2.write(myTimeString2+","+str(vuln_countC)+","+str(vuln_countH)+","+str(vuln_countM)+","+str(vuln_countL)+","+str(x['name'])+"\n")
 	   f2.close()
 	f.close()
-	f=open(output_dir+"tgs_vuln_summary.csv","w+")
+	f=open(results_dir+"tgs_vuln_summary.csv","w+")
 	fcsv=csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 	for row in table_data:
 		if row[1]!=2746: #exclude corrupt record
-			print row
+			print(row)
 			fcsv.writerow(row)
 	f.close()
-
-
-#
-# User Summary
-#
-if user_summary==1:
-	print "** User Summary **\n"
-	user_list=get_users(headers)
-	f=open(output_dir+"tgs_user_list.csv","w+")
-	fcsv=csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-	for row in user_list:
-		print row
-		fcsv.writerow(row)
-	f.close()
-
-#
-# Scanning Summary
-#
-if scan_summary==1:
-	print "\n** Scan Summary **"
-	table_data=get_scans(headers)
-	f=open(output_dir+"tgs_scan_summary.csv","w+")
-	fcsv=csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-	for row in table_data:
-		#print(row)
-		fcsv.writerow(row)
-	f.close()
-
-
-#
-# Scanning History
-#
-if scan_history==1:
-	print "\n** Scan History **"
-
-	rowcount=1
-	f=open(output_dir+"tgs_scan_summary.csv","r")
-	for x in f:
-		rowcount=rowcount+1
-	flen=rowcount	
-	f.close()
-	f=open(output_dir+"tgs_scan_summary.csv","r")
-	rowcount=1
-	fres=open(output_dir+"tgs_scan_history.csv","w+")
-	fres_writer=csv.writer(fres, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-	for x in f:
-		row=x.split(",")
-		try:
-			id=row[0]
-			name=row[1]
-			owner=row[2]
-			history=get_scan_history(id,headers)
-			time.sleep(.100)
-			results=[id, name, owner, history['id'], history['time_start'], history['status']]
-			print str(rowcount), str(flen), id, name, owner, history['id'], history['time_start'], history['status']
-			fres_writer.writerow(results)
-			rowcount=rowcount+1
-		except:
-			print id, name, "error"
-	f.close()
-	fres.close()
-
-#
-# Scanning Details
-#
-if scan_details==1:
-
-	# open up history file
-	print("\n*** Scan Details ***")
-	history_file=output_dir+"scan_ids_processed.csv"
-	if not os.path.isfile(history_file):
-        	open(history_file,'a')
-	with open(history_file,'r') as fh:
-        	existing_ids=[x.strip() for x in fh.readlines()]
-
-	# reopen history file to write new scan jobs
-	fhist=open(history_file,'a')
-
-	rowcount=1
-	f=open(output_dir+"tgs_scan_history.csv","r")
-	for x in f:
-		rowcount=rowcount+1
-	flen=rowcount	
-	f.close()
-	f=open(output_dir+"tgs_scan_history.csv","r")
-	fres=open(output_dir+"tgs_scan_details.csv","a+")
-	fres_writer=csv.writer(fres, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-	rowcount=1
-	for x in f:
-	   	row=x.split(",")
-	   	scan_id=row[0]
-		name=row[1]
-		owner=row[2]
-		hist_id=row[3]
-		start_time=row[4]
-		status=row[5]
-		if hist_id not in existing_ids:
-		  try:
-			results=get_scan_details(scan_id,hist_id,headers)
-			time.sleep(.100)
-			fres_writer.writerow(results)
-			print str(rowcount), str(flen), scan_id, name, owner, hist_id, start_time, status
-		  except:
-			print str(rowcount), str(flen), scan_id, name, owner, hist_id, start_time, status
-			print "Scan Details Error processing above record"
-		rowcount=rowcount+1
-		fhist.write(str(hist_id)+"\n")
-	f.close()
-	fres.close()
-	fhist.close()
-
