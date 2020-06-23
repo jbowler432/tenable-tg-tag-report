@@ -1,73 +1,115 @@
 <style>
-.bar_chart {
-padding: 10px;
-margin: 10px;
-text-align: center;
+body {
+font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+text-align: left;
+background-color: #f7f7f7;
+}
+h1 {
+font-size: 1.6em;
+}
+h2 {
+font-size: 1.4em;
+}
+pre {
+  overflow-x: auto;
+  white-space: pre-wrap;
+#  white-space: -moz-pre-wrap;
+#  white-space: -pre-wrap;
+#  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}
+td {
+font-size: 0.9em;
 }
 .simple_table {
 margin-left: 20px;
 }
+.table1 tr:nth-child(even) {
+background-color: #f7f7f7;
+}
+.table1 tr:nth-child(odd) {
+background-color: white;
+}
+.breakdown td{
+border-bottom: 1px solid #ddd;
+border-right: 1px solid #ddd;
+}
+.td_orange{
+font-size: 0.9em;
+background-color: #FF9757;
+}
+.td_green{
+font-size: 0.9em;
+background-color: #78AF43;
+}
+.td_red{
+font-size: 0.9em;
+background-color: #F6303E;
+}
+.page_heading {
+padding-left: 15px;
+}
+.bar_chart_fl b {
+font-size: 1.2em;
+}
+.bar_chart_fl {
+font-size: 0.8em;
+float: left;
+background-color: white;
+padding: 10px;
+margin: 10px;
+text-align: left;
+border: 2px solid white;
+border-radius: 3px;
+box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+}
 .hideme {
 display: none;
 }
-#tg_search {
-width: 600px;
-font-size: 1em;
-margin-left: 10px;
-}
-#scan_search {
-width: 600px;
-font-size: 1em;
-margin-left: 10px;
-}
 .critical {
-padding: 20px;
-width: 100px;
-height: 50px;
-background-color: red;
+background-color: #f63442;
 color: white;
 text-align: center;
-border: 2px solid black;
+border: 2px solid #708090;
 border-radius: 3px;
+padding: 2px;
 }
 .high {
-padding: 20px;
-width: 100px;
-height: 50px;
-background-color: orange;
+background-color: #ff9757;
 color: white;
 text-align: center;
-border: 2px solid black;
+border: 2px solid #708090;
 border-radius: 3px;
+padding: 2px;
 }
 .medium {
-padding: 20px;
-width: 100px;
-height: 50px;
-background-color: #ffd700;
+background-color: #f9c23b;
 color: white;
 text-align: center;
-border: 2px solid black;
+border: 2px solid #708090;
 border-radius: 3px;
+padding: 2px;
 }
 .low {
-padding: 20px;
-width: 100px;
-height: 50px;
-background-color: #228b22;
+background-color: #7bb147;
 color: white;
 text-align: center;
-border: 2px solid black;
+border: 2px solid #708090;
 border-radius: 3px;
+padding: 2px;
+}
+.info {
+background-color: #0070b6;
+color: white;
+text-align: center;
+border: 2px solid #708090;
+border-radius: 3px;
+padding: 2px;
 }
 pre {
 overflow-x: auto;
 white-space: pre-wrap;
 word-wrap: break-word;
-}
-body {
-font-family: Arial, Helvetica, sans-serif;
-background-color: white;
 }
 .floatleft {
 float: left;
@@ -83,84 +125,16 @@ padding: 10px;
 margin-bottom: 10px;
 margin-top: 10px;
 }
-.table_vs {
-padding: 10px;
-margin: 10px;
-text-align: center;
-}
-.table_vs td {
-padding: 20px;
-}
-.table1 {
-background-color: white;
-padding-left: 10px;
-padding-right: 10px;
-margin-right: 10px;
-margin-bottom: 10px;
-text-align: center;
-}
-.table1 td {
-border-right: 2px solid #ececec;
-vertical-align: top;
-padding: 10px;
-}
-.table1 th {
-vertical-align: top;
-text-align: center;
-}
-.table1 tr:nth-child(even) {
-background-color: #ececec;
-}
-.table1 tr:nth-child(odd) {
-background-color: white;
-}
-.table2 {
-margin-left: 10px;
-margin-bottom: 10px;
-padding-left: 10px;
-padding-right: 10px;
-}
-.table2 td {
-vertical-align: top;
-text-align: left;
-padding: 10px;
-}
-.table2 th {
-vertical-align: top;
-text-align: center;
-}
-.table3 {
-float: left;
-background-color: white;
-padding-left: 10px;
-padding-right: 10px;
-margin-right: 10px;
-margin-bottom: 10px;
-}
-.table3 td {
-vertical-align: top;
-text-align: center;
-padding: 10px;
-}
-.table3 th {
-vertical-align: top;
-text-align: center;
-}
 .plugout {
 border: 2px solid black;
 border-radius: 5px;
 width: 70%;
-background-color: black;
+background-color: #0d3d5c;
 color: white;
 padding-top: 10px;
 padding-bottom: 10px;
-padding-left: 20px;
-padding-right: 20px;
-}
-h1 {
-text-align: center;
-}
-.page_no_border {
+padding-left: 10px;
+padding-right: 10px;
 }
 .article_no_page {
 padding-left: 30px;
@@ -174,4 +148,3 @@ box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
 }
 }
 </style>
-

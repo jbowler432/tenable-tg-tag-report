@@ -181,40 +181,35 @@ f.write('</script>\n')
 
 f.write('</head>\n<body>\n')
 
-f.write('<div class=article_no_page>\n')
+f.write('<div class=page_heading>\n')
+f.write('<h1>Target Group and Tag Report</h1>')
+f.write('<table width=100%></table></div>')
 
-
-f.write("<h1>Tenable Status Report</h1>\n")
-
-myhtml='<table class=table2 width=800px>\n'\
-	'<td width=150px><a href="#tgs">Target Group Report</a></td>\n'\
-	'<td>Shows the licensed asset count and vulnerability severity per target group. Organised in reverse order of asset count (90 day view)</td>\n'\
-	'<tr><td><a href="#scans">Scan Job Report</a></td>\n'\
-	'<td>Shows all the scheduled scan jobs, how many hosts were discovered and the last time the scan was run. Organised in reverse order of host count.</td>\n'\
-	'</table>\n'
-# f.write(myhtml)
 
 #
 # Company Summary
 #
 reader=csv.reader(open(results_dir+"company_summary.csv"),delimiter=",")
-f.write("<div class=border1 id=company>\n")
-f.write("<h1>Current Vulnerabilities</h1>\n")
-f.write("<table class=simple_table width=95%>\n")
+f.write('<div class=bar_chart_fl>\n')
+f.write("<h1>Vulnerability Summary</h1>\n")
+f.write("<table width=900px>\n")
 f.write("<tr><td align=left>\n")
 f.write('Current vulnerability count grouped by severity. Asset and vulnerability calculations are based on the "Last 90 Days" view from the date shown.\n')
 f.write("</td><td>&nbsp;</td>\n")
 f.write("</table>\n")
 
-f.write("<table class=table_vs width=95%>\n")
-f.write("<tr><td align=left><b>Licensed Asset Count</b></td><td><b>Critical</b></td><td><b>High</b></td><td><b>Medium</b></td><td><b>Low</b></td>\n")
+f.write('<br>')
+
+
+f.write("<table class=table1 width=600px>\n")
+f.write("<tr><td align=left>Licensed Asset Count</td><td>Critical</td><td>High</td><td>Medium</td><td>Low</td>\n")
 for row in reader:
 	f.write("<tr>\n")
-	f.write("<td align=left width=50%>"+'{:,}'.format(int(row[1]))+"</td>\n")
-	f.write("<td class=critical>"+'{:,}'.format(int(row[2]))+"</td>\n")
-	f.write("<td class=high>"+'{:,}'.format(int(row[3]))+"</td>\n")
-	f.write("<td class=medium>"+'{:,}'.format(int(row[4]))+"</td>\n")
-	f.write("<td class=low>"+'{:,}'.format(int(row[5]))+"</td>\n")
+	f.write("<td align=left>"+'{:,}'.format(int(row[1]))+"</td>\n")
+	f.write("<td class=critical width=80px>"+'{:,}'.format(int(row[2]))+"</td>\n")
+	f.write("<td class=high width=80px>"+'{:,}'.format(int(row[3]))+"</td>\n")
+	f.write("<td class=medium width=80px>"+'{:,}'.format(int(row[4]))+"</td>\n")
+	f.write("<td class=low width=80px>"+'{:,}'.format(int(row[5]))+"</td>\n")
 	mydate=row[0]
 f.write("<tr><td colspan=5 align=right>Last updated - "+mydate+"</td>\n")
 f.write("</table>\n")
@@ -226,25 +221,44 @@ f.write("</div>")
 #
 reader=csv.reader(open(results_dir+"tgs_vuln_summary.csv"),delimiter=",")
 sortedlist = sorted(reader, key=lambda row: int(row[6]), reverse=True)
-f.write("<div class=border1 id=tgs>\n")
+f.write('<div class=bar_chart_fl>\n')
 f.write("<h1>Target Group Report</h1>\n")
-f.write("<table class=table_vs width=95%>\n")
-f.write("<tr><td align=left>Target Group</td><td>Asset Count</td><td>Critical</td><td>High</td><td>Medium</td><td>Low</td>\n")
+f.write("<table class=table1 width=900px>\n")
+f.write("<tr><td align=left>Target Group</td><td align=center>Asset Count</td><td align=center>Critical</td><td align=center>High</td><td align=center>Medium</td><td align=center>Low</td>\n")
 for row in sortedlist:
 	f.write("<tr>\n")
-	f.write("<td align=left width=40%>"+row[0]+"</td>\n")
-	f.write("<td width=8%>"+'{:,}'.format(int(row[6]))+"</td>\n")
-	f.write("<td class=critical>"+'{:,}'.format(int(row[2]))+"</td>\n")
-	f.write("<td class=high>"+'{:,}'.format(int(row[3]))+"</td>\n")
-	f.write("<td class=medium>"+'{:,}'.format(int(row[4]))+"</td>\n")
-	f.write("<td class=low>"+'{:,}'.format(int(row[5]))+"</td>\n")
+	f.write("<td align=left>"+row[0]+"</td>\n")
+	f.write("<td align=center width=100px>"+'{:,}'.format(int(row[6]))+"</td>\n")
+	f.write("<td class=critical width=80px>"+'{:,}'.format(int(row[2]))+"</td>\n")
+	f.write("<td class=high width=80px>"+'{:,}'.format(int(row[3]))+"</td>\n")
+	f.write("<td class=medium width=80px>"+'{:,}'.format(int(row[4]))+"</td>\n")
+	f.write("<td class=low width=80px>"+'{:,}'.format(int(row[5]))+"</td>\n")
 f.write("</table>\n")
 f.write('</div>')
 
-
+#
+# Tags Report
+#
+reader=csv.reader(open(results_dir+"tags_vuln_summary.csv"),delimiter=",")
+sortedlist = sorted(reader, key=lambda row: int(row[6]), reverse=True)
+f.write('<div class=bar_chart_fl>\n')
+f.write("<h1>TAG Report</h1>\n")
+f.write("<table class=table1 width=900px>\n")
+f.write("<tr><td align=left>Tag</td><td align=center>Asset Count</td><td align=center>Critical</td><td>High</td><td align=center>Medium</td><td align=center>Low</td>\n")
+for row in sortedlist:
+	f.write("<tr>\n")
+	f.write("<td align=left>"+row[0]+"</td>\n")
+	f.write("<td align=center width=100px>"+'{:,}'.format(int(row[6]))+"</td>\n")
+	f.write("<td class=critical width=80px>"+'{:,}'.format(int(row[2]))+"</td>\n")
+	f.write("<td class=high width=80px>"+'{:,}'.format(int(row[3]))+"</td>\n")
+	f.write("<td class=medium width=80px>"+'{:,}'.format(int(row[4]))+"</td>\n")
+	f.write("<td class=low width=80px>"+'{:,}'.format(int(row[5]))+"</td>\n")
+f.write("</table>\n")
 f.write('</div>')
 
-f.write('</div></html>')
+#f.write('</div>')
+
+f.write('</html>')
 
 
 f.close()

@@ -4,6 +4,7 @@ import sys
 import time
 import os
 import csv
+import urllib
 from datetime import datetime
 
 def read_keys():
@@ -42,7 +43,7 @@ def get_asset_filters(headers):
 	response = requests.request("GET", url, headers=headers)
 	decoded = json.loads(response.text)
 	for filter in decoded['filters']:
-		# print(filter)
+        #print(filter)
 		# print("\n")
 		filter_name=filter['name']
 		filter_control=filter['control']
@@ -52,6 +53,22 @@ def get_asset_filters(headers):
 			# print(filter_control)
 			# print(control_list)
 			return control_list
+
+def get_tags(headers):
+    # returns list of all target group filters
+    url = "https://cloud.tenable.com/filters/workbenches/vulnerabilities"
+    response = requests.request("GET", url, headers=headers)
+    decoded = json.loads(response.text)
+    return_lst=[]
+    for filter in decoded['filters']:
+        filter_name=filter['name']
+        filter_control=filter['control']
+        if "tag." in filter_name:
+            control_list=filter_control['list']
+            append_value={"tag_cat":filter_name,"tag_values":control_list}
+            return_lst.append(append_value)
+    return return_lst
+
 
 def get_target_groups(headers):
         url = "https://cloud.tenable.com/target-groups"
@@ -66,7 +83,6 @@ def get_target_groups(headers):
                 tg_lst=[tg_name,tg_id,tg_members]
                 rtn_lst.append(tg_lst)
         return rtn_lst
-
 
 
 def get_vuln_filters(headers):
@@ -113,87 +129,28 @@ def get_assets(target_group,headers):
 	return asset_count
 
 def get_vulns(querystring,headers):
-	url = "https://cloud.tenable.com/workbenches/vulnerabilities"
-	response = requests.request("GET", url, headers=headers, params=querystring)
-	decoded = json.loads(response.text)
-	vuln_count=decoded['total_vulnerability_count']
-	return vuln_count
-
-def get_users(headers):
-	url = "https://cloud.tenable.com/users"
-	response = requests.request("GET", url, headers=headers)
-	decoded = json.loads(response.text)
-	row=[]
-	table=[]
-	for x in decoded['users']:
-		uname=x['username']
-		try:
-			lastlogin_ms=x['lastlogin']
-			lastlogin=lastlogin_ms/1000
-			days_since=days_passed(lastlogin)
-			loginfail=x['login_fail_total']
-			row=[uname,datetime.utcfromtimestamp(lastlogin).strftime('%Y-%m-%d'),days_since,loginfail]
-			table.append(row)
-		except:
-			row=[uname,'No login info']
-			table.append(row)
-	return table
-
-def get_scan_details(scan_id,hist_id,headers):
-	url = "https://cloud.tenable.com/scans/"+str(scan_id)
-	querystring={"history_id":str(hist_id)}
-	response = requests.request("GET", url, headers=headers, params=querystring)
-	decoded = json.loads(response.text)
-	scan_start=decoded['info']['scan_start']
-	print(scan_start)
-	days_since=days_passed(scan_start)
-	name=decoded['info']['name']
-	owner=decoded['info']['owner']
-	hostcount=decoded['info']['hostcount']
-	try:
-		targets=decoded['info']['targets'].replace('\n',' ').replace('\r',' ')
-	except:
-		targets=decoded['info']['targets']
-	row=[scan_id,name,owner,hostcount,datetime.utcfromtimestamp(scan_start).strftime('%Y-%m-%d'),days_since,targets]
-	return row
-
-def get_scan_history(id,headers):
-	url = "https://cloud.tenable.com/scans/"+str(id)+"/history"
-	response = requests.request("GET", url, headers=headers)
-	decoded = json.loads(response.text)
-	history=decoded['history'][0]
-	return history
-
-def get_scans(headers):
-    url = "https://cloud.tenable.com/scans"
-    response = requests.request("GET", url, headers=headers)
+    url = "https://cloud.tenable.com/workbenches/vulnerabilities"
+    params = urllib.parse.urlencode(querystring, quote_via=urllib.parse.quote)
+    response = requests.request("GET", url, headers=headers, params=params)
     decoded = json.loads(response.text)
-    row=[]
-    table=[]
-    count=0
-    for x in decoded['scans']:
-        try:
-            name=x['name']
-            id=x['id']
-            enabled=x['enabled']
-            owner=x['owner']
-            status=x['status']
-            type=x['type']
-            rrules=x['rrules']
-            schuuid=x['schedule_uuid']
-            if status!="empty":
-                count=count+1
-                row=[id,name,owner,status,type,rrules,schuuid]
-                print("Scan job = "+str(id)+" | "+name+" | "+owner)
-                table.append(row)
-        except:
-            if status!="empty":
-                row=[id,name,"error"]
-                print(row)
-    #table.append(row)
-    print("Num scan jobs = "+str(count))
-    return table
+    #print(response.text)
+    vuln_count=0
+    if "total_vulnerability_count" in decoded:
+        vuln_count=decoded['total_vulnerability_count']
+    else:
+        print(response.text)
+    return vuln_count
 
+def get_assets2(querystring,headers):
+    url = "https://cloud.tenable.com/workbenches/assets"
+    params = urllib.parse.urlencode(querystring, quote_via=urllib.parse.quote)
+    response = requests.request("GET", url, headers=headers, params=params)
+    decoded = json.loads(response.text)
+    #print(response.text)
+    vuln_count=0
+    if "total" in decoded:
+        vuln_count=decoded['total']
+    return vuln_count
 
 def write_csv(fh,lst):
     for row in lst:
@@ -225,12 +182,14 @@ def write_csv_row(fh,row):
         fh.write(myTimeString2)
         fh.write("\n")
 
+def replace_spaces(mystring):
+    newstring = mystring.replace(" ","%20")
+    print(newstring)
+    return newstring
 
 #
 # Main
 #
-
-print("\n*** in Master ***")
 
 keys_dir="../"
 results_dir="../results/"
@@ -255,11 +214,12 @@ myTimeString=" (UTC,"+datetime.utcfromtimestamp(time.time()).strftime('%Y-%m-%d 
 asset_filters=get_asset_filters(headers)
 vuln_filters=get_vuln_filters(headers)
 tg_info=get_target_groups(headers)
+tag_lst=get_tags(headers)
 
-company_summary=1
-tg_summary=1
-asset_summary=1
-vuln_summary=1
+company_summary=0
+tg_summary=0
+vuln_summary=0
+tag_summary=1
 
 #
 # company summary - no target group
@@ -270,40 +230,16 @@ if company_summary==1:
     # all licensed
     asset_count=get_assets_no_tg(headers)
     time.sleep(1)
-    # nnm exclusive
-    querystring = {"date_range":"90","filter.0.filter":"is_licensed","filter.0.quality":"eq","filter.0.value":"true","filter.1.filter":"sources","filter.1.quality":"set-hasonly","filter.1.value":"PVS","filter.search_type":"and","all_fields":"full"}
-    pvs_count=get_assets_filtered(querystring,headers)
-    time.sleep(1)
-    # nessus exclusive
-    querystring = {"date_range":"90","filter.0.filter":"is_licensed","filter.0.quality":"eq","filter.0.value":"true","filter.1.filter":"sources","filter.1.quality":"set-hasonly","filter.1.value":"NESSUS_SCAN","filter.search_type":"and","all_fields":"full"}
-    nessus_count=get_assets_filtered(querystring,headers)
-    time.sleep(1)
-    # agent exclusive
-    querystring = {"date_range":"90","filter.0.filter":"is_licensed","filter.0.quality":"eq","filter.0.value":"true","filter.1.filter":"sources","filter.1.quality":"set-hasonly","filter.1.value":"NESSUS_AGENT","filter.search_type":"and","all_fields":"full"}
-    agent_count=get_assets_filtered(querystring,headers)
-    time.sleep(1)
-    # has agent
-    querystring = {"date_range":"90","filter.0.filter":"is_licensed","filter.0.quality":"eq","filter.0.value":"true","filter.1.filter":"sources","filter.1.quality":"set-has","filter.1.value":"NESSUS_AGENT","filter.search_type":"and","all_fields":"full"}
-    has_agent_count=get_assets_filtered(querystring,headers)
-    time.sleep(1)
-    # has nessus
-    querystring = {"date_range":"90","filter.0.filter":"is_licensed","filter.0.quality":"eq","filter.0.value":"true","filter.1.filter":"sources","filter.1.quality":"set-has","filter.1.value":"NESSUS_SCAN","filter.search_type":"and","all_fields":"full"}
-    has_nessus_count=get_assets_filtered(querystring,headers)
-    time.sleep(1)
-    print("Total Licensed Asset Count = "+str(asset_count))
-    print("NNM Exclusive = "+str(pvs_count))
-    print("Agent Exclusive = "+str(agent_count))
-    print("Nessus Exclusive = "+str(nessus_count))
-    print("Has Agent = "+str(has_agent_count))
-    print("Has Nessus = "+str(has_nessus_count))
-    time.sleep(1)
     querystringC = {"date_range":"90","filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"Critical","filter.search_type":"and","all_fields":"full"}
     querystringH = {"date_range":"90","filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"High","filter.search_type":"and","all_fields":"full"}
     querystringM = {"date_range":"90","filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"Medium","filter.search_type":"and","all_fields":"full"}
     querystringL = {"date_range":"90","filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"Low","filter.search_type":"and","all_fields":"full"}
     vuln_countC=get_vulns(querystringC,headers)
+    time.sleep(1)
     vuln_countH=get_vulns(querystringH,headers)
+    time.sleep(1)
     vuln_countM=get_vulns(querystringM,headers)
+    time.sleep(1)
     vuln_countL=get_vulns(querystringL,headers)
     print("\n*** Company Summary ***")
     print("Asset Count="+str(asset_count)+" Criticals="+str(vuln_countC)+" Highs="+str(vuln_countH)+" Med="+str(vuln_countM)+" Low="+str(vuln_countL))
@@ -332,74 +268,74 @@ if tg_summary==1:
 		fcsv.writerow(row)
 	f.close()
 
-
-#
-# Asset Count by Target Group
-#
-if asset_summary==1:
-    print("\n** Asset Count per Target Group **")
-    f=open(results_dir+"tgs_asset_count_hist.csv","w+")
-    row=[]
-    table_data=[]
-    for x in asset_filters:
-        tg_id=x['value']
-        fname=str(tg_id)+"_asset_count_hist.csv"
-        f.write(fname+","+x['name']+"\n")
-        asset_count=get_assets(x['value'],headers)
-        time.sleep(0.500)
-        row=[x['name'],x['value'],asset_count]
-        print(x['name'], x['value'], asset_count)
-        table_data.append(row)
-    f2=open(results_dir+fname,"a+")
-    myTimeString2=datetime.utcfromtimestamp(time.time()).strftime('%Y-%m-%d')
-    f2.write(myTimeString2+","+str(asset_count)+","+str(x['name'])+"\n")
-    f2.close()
-    f.close()
-    f=open(results_dir+"tgs_asset_count.csv","w+")
-    fcsv=csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-    for row in table_data:
-    #print row
-        fcsv.writerow(row)
-    f.close()
-
 #
 # Vuln Count by Target Group and Severity
 #
 if vuln_summary==1:
-	print("\n** Vuln Count by Target Group **")
-	f=open(results_dir+"tgs_vuln_count_hist.csv","w+")
-	row=[]
-	table_data=[]
-	for x in vuln_filters:
-	   tg_name=x['name']
-	   tg_value=x['value']
-	   fname=str(tg_value)+"_vuln_count_hist.csv"
-	   f.write(fname+","+x['name']+"\n")
-	   querystringC = {"date_range":"90","filter.0.filter":"target_group","filter.0.quality":"eq","filter.0.value":str(tg_value),"filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"Critical","filter.search_type":"and","all_fields":"full"}
-	   querystringH = {"date_range":"90","filter.0.filter":"target_group","filter.0.quality":"eq","filter.0.value":str(tg_value),"filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"High","filter.search_type":"and","all_fields":"full"}
-	   querystringM = {"date_range":"90","filter.0.filter":"target_group","filter.0.quality":"eq","filter.0.value":str(tg_value),"filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"Medium","filter.search_type":"and","all_fields":"full"}
-	   querystringL = {"date_range":"90","filter.0.filter":"target_group","filter.0.quality":"eq","filter.0.value":str(tg_value),"filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"Low","filter.search_type":"and","all_fields":"full"}
-	   vuln_countC=get_vulns(querystringC,headers)
-	   time.sleep(0.500)
-	   vuln_countH=get_vulns(querystringH,headers)
-	   time.sleep(0.500)
-	   vuln_countM=get_vulns(querystringM,headers)
-	   time.sleep(0.500)
-	   vuln_countL=get_vulns(querystringL,headers)
-	   time.sleep(0.500)
-	   asset_count=get_assets(tg_value,headers)
-	   row=[tg_name,tg_value,vuln_countC,vuln_countH,vuln_countM,vuln_countL,asset_count]
-	   print(tg_name, tg_value, vuln_countC, vuln_countH, vuln_countM, vuln_countL,asset_count)
-	   table_data.append(row)
-	   f2=open(results_dir+fname,"a+")
-	   myTimeString2=datetime.utcfromtimestamp(time.time()).strftime('%Y-%m-%d')
-	   f2.write(myTimeString2+","+str(vuln_countC)+","+str(vuln_countH)+","+str(vuln_countM)+","+str(vuln_countL)+","+str(x['name'])+"\n")
-	   f2.close()
-	f.close()
-	f=open(results_dir+"tgs_vuln_summary.csv","w+")
-	fcsv=csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-	for row in table_data:
-		if row[1]!=2746: #exclude corrupt record
-			print(row)
-			fcsv.writerow(row)
-	f.close()
+    print("\n** Vuln Count by Target Group **")
+    f=open(results_dir+"tgs_vuln_count_hist.csv","w+")
+    row=[]
+    table_data=[]
+    for x in vuln_filters:
+        tg_name=x['name']
+        tg_value=x['value']
+        fname=str(tg_value)+"_vuln_count_hist.csv"
+        f.write(fname+","+x['name']+"\n")
+        querystringC = {"date_range":"90","filter.0.filter":"target_group","filter.0.quality":"eq","filter.0.value":str(tg_value),"filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"Critical","filter.search_type":"and","all_fields":"full"}
+        querystringH = {"date_range":"90","filter.0.filter":"target_group","filter.0.quality":"eq","filter.0.value":str(tg_value),"filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"High","filter.search_type":"and","all_fields":"full"}
+        querystringM = {"date_range":"90","filter.0.filter":"target_group","filter.0.quality":"eq","filter.0.value":str(tg_value),"filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"Medium","filter.search_type":"and","all_fields":"full"}
+        querystringL = {"date_range":"90","filter.0.filter":"target_group","filter.0.quality":"eq","filter.0.value":str(tg_value),"filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"Low","filter.search_type":"and","all_fields":"full"}
+        vuln_countC=get_vulns(querystringC,headers)
+        time.sleep(0.500)
+        vuln_countH=get_vulns(querystringH,headers)
+        time.sleep(0.500)
+        vuln_countM=get_vulns(querystringM,headers)
+        time.sleep(0.500)
+        vuln_countL=get_vulns(querystringL,headers)
+        time.sleep(0.500)
+        asset_count=get_assets(tg_value,headers)
+        row=[tg_name,tg_value,vuln_countC,vuln_countH,vuln_countM,vuln_countL,asset_count]
+        print(tg_name, tg_value, vuln_countC, vuln_countH, vuln_countM, vuln_countL,asset_count)
+        table_data.append(row)
+    f2=open(results_dir+fname,"a+")
+    myTimeString2=datetime.utcfromtimestamp(time.time()).strftime('%Y-%m-%d')
+    f2.write(myTimeString2+","+str(vuln_countC)+","+str(vuln_countH)+","+str(vuln_countM)+","+str(vuln_countL)+","+str(x['name'])+"\n")
+    f2.close()
+    f.close()
+    f=open(results_dir+"tgs_vuln_summary.csv","w+")
+    fcsv=csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    for row in table_data:
+        fcsv.writerow(row)
+    f.close()
+
+if tag_summary==1:
+    table_data=[]
+    for x in tag_lst:
+        tag_cat=x["tag_cat"]
+        tag_values=x["tag_values"]
+        print(tag_cat)
+        for i in tag_values:
+            print(tag_cat, i["value"])
+            querystringC = {"date_range":"90","filter.0.filter":tag_cat,"filter.0.quality":"set-has","filter.0.value":i["value"],"filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"Critical","filter.search_type":"and","all_fields":"full"}
+            querystringH = {"date_range":"90","filter.0.filter":tag_cat,"filter.0.quality":"set-has","filter.0.value":i["value"],"filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"High","filter.search_type":"and","all_fields":"full"}
+            querystringM = {"date_range":"90","filter.0.filter":tag_cat,"filter.0.quality":"set-has","filter.0.value":i["value"],"filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"Medium","filter.search_type":"and","all_fields":"full"}
+            querystringL = {"date_range":"90","filter.0.filter":tag_cat,"filter.0.quality":"set-has","filter.0.value":i["value"],"filter.1.filter":"severity","filter.1.quality":"eq","filter.1.value":"Low","filter.search_type":"and","all_fields":"full"}
+            #print(querystringC)
+            vuln_countC=get_vulns(querystringC,headers)
+            time.sleep(0.500)
+            vuln_countH=get_vulns(querystringH,headers)
+            time.sleep(0.500)
+            vuln_countM=get_vulns(querystringM,headers)
+            time.sleep(0.500)
+            vuln_countL=get_vulns(querystringL,headers)
+            time.sleep(0.500)
+            querystring = {"date_range":"90","filter.0.filter":"is_licensed","filter.0.quality":"eq","filter.0.value":"true","filter.1.filter":tag_cat,"filter.1.quality":"set-has","filter.1.value":i["value"],"filter.search_type":"and","all_fields":"full"}
+            asset_count=get_assets2(querystring,headers)
+            print(tag_cat, i["value"], asset_count, vuln_countC, vuln_countH, vuln_countM, vuln_countL)
+            row=[tag_cat+":"+i["value"],i["value"],vuln_countC,vuln_countH,vuln_countM,vuln_countL,asset_count]
+            table_data.append(row)
+        f=open(results_dir+"tags_vuln_summary.csv","w+")
+        fcsv=csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        for row in table_data:
+            fcsv.writerow(row)
+        f.close()
