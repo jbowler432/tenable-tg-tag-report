@@ -202,7 +202,7 @@ f.write('<br>')
 
 
 f.write("<table class=table1 width=600px>\n")
-f.write("<tr><td align=left>Licensed Asset Count</td><td>Critical</td><td>High</td><td>Medium</td><td>Low</td>\n")
+f.write("<tr><td align=left>Licensed Asset Count</td><td align=center>Critical</td><td align=center>High</td><td align=center>Medium</td><td align=center>Low</td>\n")
 for row in reader:
 	f.write("<tr>\n")
 	f.write("<td align=left>"+'{:,}'.format(int(row[1]))+"</td>\n")
@@ -244,7 +244,7 @@ sortedlist = sorted(reader, key=lambda row: int(row[6]), reverse=True)
 f.write('<div class=bar_chart_fl>\n')
 f.write("<h1>TAG Report</h1>\n")
 f.write("<table class=table1 width=900px>\n")
-f.write("<tr><td align=left>Tag</td><td align=center>Asset Count</td><td align=center>Critical</td><td>High</td><td align=center>Medium</td><td align=center>Low</td>\n")
+f.write("<tr><td align=left>Tag</td><td align=center>Asset Count</td><td align=center>Critical</td><td align=center>High</td><td align=center>Medium</td><td align=center>Low</td>\n")
 for row in sortedlist:
 	f.write("<tr>\n")
 	f.write("<td align=left>"+row[0]+"</td>\n")
