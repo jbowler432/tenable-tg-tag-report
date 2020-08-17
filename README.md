@@ -1,7 +1,9 @@
 # tenable-tg-tag-report
 ```
-Generates licensed asset count and vuln counts grouped by target groups
-and tags.
+*** This tool is not an officially supported Tenable project ***
+
+Uses the public APIs for tenable.io to generate licensed asset count and vuln counts grouped by target groups
+and tags. Useful to understand the breakdown of licensing and vulns across groups
 
 run with
 
